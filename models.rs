@@ -17,7 +17,7 @@ pub struct Market {
     pub volume: Option<f64>,
 
     #[serde(rename = "endDate")]
-    pub end_date: Option<String>,
+    pub end_date: String,
 
     pub image: Option<String>,
     pub category: Option<String>,
@@ -131,7 +131,6 @@ pub enum ActivityLevel {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Tag {
     pub id: String,
-    #[serde(alias = "label")]
     pub name: String,
     pub slug: String,
 }
@@ -167,9 +166,7 @@ pub struct Event {
     #[serde(default)]
     pub slug: Option<String>,
     #[serde(default)]
-    pub tags: Option<Vec<Tag>>,
-    #[serde(default)]
-    pub markets: Option<Vec<Market>>,
+    pub tags: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

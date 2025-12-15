@@ -218,6 +218,20 @@ impl PolymarketClient {
         Ok(market)
     }
 
+    /// Fetches an event by its slug.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The API request fails
+    /// - The event is not found
+    /// - The response cannot be deserialized
+    pub async fn get_event_by_slug(&self, slug: &str) -> Result<Event> {
+        let url = format!("{}/events/slug/{}", self.base_url, slug);
+        let event: Event = self.make_request_with_retry(&url).await?;
+        Ok(event)
+    }
+
     /// Searches for markets containing the specified keyword in question, description, or category.
     ///
     /// # Errors

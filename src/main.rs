@@ -79,6 +79,11 @@ impl PolymarketMcpServer {
         }))
     }
 
+    pub async fn get_event_by_slug(&self, slug: String) -> Result<Value> {
+        let event = self.client.get_event_by_slug(&slug).await?;
+        Ok(json!(event))
+    }
+
     // MCP Resources Support
     pub async fn list_resources(&self) -> Result<Value> {
         let resources = vec![
@@ -227,8 +232,8 @@ impl PolymarketMcpServer {
                             "Analyze this prediction market:\n\nMarket: {}\nQuestion: {}\nLiquidity: ${:.0}\nVolume: ${:.0}\nActive: {}\n\nCurrent Prices:\n{}\n\nProvide analysis on:\n1. Market sentiment and trends\n2. Liquidity assessment\n3. Price efficiency\n4. Potential trading opportunities\n5. Risk factors",
                             market.id,
                             market.question,
-                            market.liquidity,
-                            market.volume,
+                            market.liquidity.unwrap_or(0.0),
+                            market.volume.unwrap_or(0.0),
                             market.active,
                             serde_json::to_string_pretty(&prices)?
                         ))
@@ -510,6 +515,20 @@ async fn handle_mcp_request(
                                 }
                             }
                         }
+                    },
+                    {
+                        "name": "get_event_by_slug",
+                        "description": "Get an event by its slug",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "slug": {
+                                    "type": "string",
+                                    "description": "The slug of the event"
+                                }
+                            },
+                            "required": ["slug"]
+                        }
                     }
                 ]
             })
@@ -607,6 +626,24 @@ async fn handle_mcp_request(
                         .and_then(|v| v.as_u64())
                         .map(|l| l as u32);
                     match server.get_trending_markets(limit).await {
+                        Ok(result) => json!({
+                            "content": [{
+                                "type": "text",
+                                "text": serde_json::to_string_pretty(&result).unwrap()
+                            }]
+                        }),
+                        Err(e) => json!({
+                            "content": [{
+                                "type": "text",
+                                "text": format!("Error: {}", e)
+                            }],
+                            "isError": true
+                        }),
+                    }
+                }
+                "get_event_by_slug" => {
+                    let slug = arguments.get("slug")?.as_str()?.to_string();
+                    match server.get_event_by_slug(slug).await {
                         Ok(result) => json!({
                             "content": [{
                                 "type": "text",
